@@ -18,10 +18,14 @@ body {
   color: var(--foreground);
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+  /* overflow: hidden; Prevent scrolling outside the fixed size */
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+#__next {
+  margin: 0 auto; /* Center the app horizontally */
+  display: flex;
+  flex-direction: column;
+  /* overflow: auto; */
 }
