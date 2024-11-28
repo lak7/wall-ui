@@ -1,23 +1,31 @@
+// src/app/page.tsx
 "use client";
 import { motion } from "framer-motion";
 import { Zap } from "lucide-react";
-import Image from "next/image";
-import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import React from "react";
+import { useChargingStatus } from "@/hooks/useChargingStatus";
+
+interface ChargingOption {
+  id: number;
+  text: string;
+}
 
 const Select = () => {
-  const [isParked, setIsParked] = useState(false);
-  const [selectedOption, setSelectedOption] = useState(null);
+  const router = useRouter();
+  const { updateChargingStatus, status } = useChargingStatus();
 
-  const buttonVariants = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    hover: {
-      scale: 1.02,
-      backgroundColor: "rgba(255, 255, 255, 0.1)",
-    },
+  const handleSelect = async () => {
+    try {
+      await updateChargingStatus(true);
+      // You can add additional logic here, like navigation
+      router.push("/charge");
+    } catch (error) {
+      console.error("Error initializing charging:", error);
+    }
   };
 
-  const options = [
+  const options: ChargingOption[] = [
     { id: 1, text: "Charge by %" },
     { id: 2, text: "Charge by Time" },
     { id: 3, text: "Charge by ₹" },
@@ -52,10 +60,12 @@ const Select = () => {
           {/* Charging Options */}
           <div className="flex justify-center items-center w-full">
             <div className="flex flex-col gap-10 w-80">
-              {options.map((option, index) => (
+              {options.map((option) => (
                 <button
-                  className="shadow-[inset_0_0_0_2px_#616467] text-black px-12 py-7 rounded-full tracking-widest uppercase font-bold bg-transparent hover:bg-[#616467] hover:text-white dark:text-neutral-200 transition duration-200 text-lg "
-                  key={index}
+                  className="shadow-[inset_0_0_0_2px_#616467] text-black px-12 py-7 rounded-full tracking-widest uppercase font-bold bg-transparent hover:bg-[#616467] hover:text-white dark:text-neutral-200 transition duration-200 text-lg"
+                  key={option.id}
+                  onClick={handleSelect}
+                  disabled={status.isChargingInitialized}
                 >
                   <div className="w-full flex justify-between">
                     {option.text}

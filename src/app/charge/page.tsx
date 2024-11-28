@@ -49,11 +49,7 @@ const Charge = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.6 }}
           >
-            <span
-              className={`${poppins.className} relative inline-block after:content-[''] after:absolute after:-bottom-2 after:left-0 after:w-1/3 after:h-[2px] after:bg-cyan-400/50`}
-            >
-              Charging
-            </span>
+            <span className={`${poppins.className} relative `}>Charging</span>
           </motion.div>
         </motion.div>
       </div>
