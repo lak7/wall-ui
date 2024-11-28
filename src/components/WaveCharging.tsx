@@ -5,11 +5,11 @@ import { Zap } from "lucide-react";
 
 const interThin = Inter({
   subsets: ["latin"],
-  weight: ["100"],
+  weight: ["200"],
   variable: "--font-inter",
 });
 
-const WaveCharging = ({ percentage = 45 }) => {
+const WaveCharging = ({ percentage = 0 }) => {
   const [phase, setPhase] = useState(0);
   const [hoverState, setHoverState] = useState(false);
 
@@ -274,7 +274,9 @@ const WaveCharging = ({ percentage = 45 }) => {
               /> */}
               <div className="flex-col  justify-center items-center gap-2">
                 <span
-                  className={`${interThin.className} text-4xl font-thin text-white transition-all duration-300`}
+                  className={`${interThin.className} text-4xl    ${
+                    percentage >= 60 ? "text-black " : "text-white"
+                  } transition-all duration-300`}
                   style={{
                     textShadow: `
                     0 0 10px ${colors.glow}80,
