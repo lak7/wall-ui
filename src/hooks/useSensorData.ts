@@ -1,10 +1,19 @@
-// hooks/useSensorData.js
+// hooks/useSensorData.ts
 import { useState, useEffect } from "react";
 import { ref, onValue, off } from "firebase/database";
 import { database } from "@/config/firebase";
 
+interface SensorData {
+  thermal: number;
+  current: number;
+  voltage: number;
+  timestamp: number;
+  loading: boolean;
+  error: string | null;
+}
+
 export const useSensorData = () => {
-  const [sensorData, setSensorData] = useState({
+  const [sensorData, setSensorData] = useState<SensorData>({
     thermal: 0,
     current: 0,
     voltage: 0,
