@@ -211,7 +211,6 @@ const Park = () => {
           <motion.div
             className="w-full flex justify-center items-center pb-2 relative"
             initial="initial"
-            animate="animate"
             style={{ opacity: 1 }}
             animate={{
               opacity: [0.2, 1, 0.2],
