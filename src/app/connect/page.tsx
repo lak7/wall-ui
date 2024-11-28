@@ -5,10 +5,19 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useChargingStatus } from "@/hooks/useChargingStatus";
 
 export default function Wall() {
   const router = useRouter();
+  const { updateChargingStatus, status } = useChargingStatus();
   const [connectionStatus, setConnectionStatus] = useState("waiting");
+
+  useEffect(() => {
+    const chargeInitFalse = async () => {
+      await updateChargingStatus(false);
+    };
+    chargeInitFalse();
+  }, []);
 
   useEffect(() => {
     const connectionTimer = setTimeout(() => {
