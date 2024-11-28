@@ -33,7 +33,128 @@ const Park = () => {
         </motion.div>
       </div>
       <div className="absolute w-full flex justify-center items-center">
+        {/* <svg
+          width="346"
+          height="509"
+          viewBox="0 0 346 509"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <line
+            y1="-3"
+            x2="509"
+            y2="-3"
+            transform="matrix(-4.37114e-08 -1 -1 4.37114e-08 340 509)"
+            stroke="url(#paint0_linear_0_1)"
+            stroke-width="6"
+          />
+          <line
+            y1="-3"
+            x2="509"
+            y2="-3"
+            transform="matrix(-4.37114e-08 -1 -1 4.37114e-08 0 509)"
+            stroke="url(#paint1_linear_0_1)"
+            stroke-width="6"
+          />
+          <defs>
+            <linearGradient
+              id="paint0_linear_0_1"
+              x1="0"
+              y1="0.5"
+              x2="509"
+              y2="0.5"
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop stop-color="#2C78FA" />
+              <stop offset="0.312404" stop-color="#24BEC7" />
+              <stop offset="0.661947" stop-color="#27C72C" />
+              <stop offset="1" stop-color="#24D522" />
+            </linearGradient>
+            <linearGradient
+              id="paint1_linear_0_1"
+              x1="0"
+              y1="0.5"
+              x2="509"
+              y2="0.5"
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop stop-color="#2C78FA" />
+              <stop offset="0.312404" stop-color="#24BEC7" />
+              <stop offset="0.661947" stop-color="#27C72C" />
+              <stop offset="1" stop-color="#24D522" />
+            </linearGradient>
+          </defs>
+        </svg> */}
         <svg
+          width="346"
+          height="509"
+          viewBox="0 0 346 509"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <line
+            y1="-3"
+            x2="509"
+            y2="-3"
+            transform="matrix(-4.37114e-08 -1 -1 4.37114e-08 340 509)"
+            stroke="url(#paint0_linear_0_1)"
+            stroke-width="6"
+          >
+            <animate
+              attributeName="stroke-dasharray"
+              from="0, 509"
+              to="509, 0"
+              dur="2s"
+              fill="freeze"
+            />
+          </line>
+          <line
+            y1="-3"
+            x2="509"
+            y2="-3"
+            transform="matrix(-4.37114e-08 -1 -1 4.37114e-08 0 509)"
+            stroke="url(#paint1_linear_0_1)"
+            stroke-width="6"
+          >
+            <animate
+              attributeName="stroke-dasharray"
+              from="0, 509"
+              to="509, 0"
+              dur="2s"
+              fill="freeze"
+            />
+          </line>
+          <defs>
+            <linearGradient
+              id="paint0_linear_0_1"
+              x1="0"
+              y1="0.5"
+              x2="509"
+              y2="0.5"
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop stop-color="#2C78FA" />
+              <stop offset="0.312404" stop-color="#24BEC7" />
+              <stop offset="0.661947" stop-color="#27C72C" />
+              <stop offset="1" stop-color="#24D522" />
+            </linearGradient>
+            <linearGradient
+              id="paint1_linear_0_1"
+              x1="0"
+              y1="0.5"
+              x2="509"
+              y2="0.5"
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop stop-color="#2C78FA" />
+              <stop offset="0.312404" stop-color="#24BEC7" />
+              <stop offset="0.661947" stop-color="#27C72C" />
+              <stop offset="1" stop-color="#24D522" />
+            </linearGradient>
+          </defs>
+        </svg>
+
+        {/* <svg
           width="336"
           height="449"
           viewBox="0 0 336 449"
@@ -83,7 +204,7 @@ const Park = () => {
               <stop offset="1" stopColor="#008BF5" />
             </linearGradient>
           </defs>
-        </svg>
+        </svg> */}
       </div>
       <div className="w-full flex justify-center items-center">
         <div className="flex-col justify-center items-center">
@@ -91,6 +212,15 @@ const Park = () => {
             className="w-full flex justify-center items-center pb-2 relative"
             initial="initial"
             animate="animate"
+            style={{ opacity: 1 }}
+            animate={{
+              opacity: [0.2, 1, 0.2],
+            }}
+            transition={{
+              duration: 0.8,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
           >
             {/* Outer Glow Effect */}
             <motion.div
@@ -98,15 +228,6 @@ const Park = () => {
               style={{
                 background:
                   "radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%)",
-              }}
-              animate={{
-                scale: [1, 1.4, 1],
-                opacity: [0.3, 0.5, 0.3],
-              }}
-              transition={{
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
               }}
             />
 
@@ -117,15 +238,6 @@ const Park = () => {
                 background:
                   "radial-gradient(circle, rgba(42,248,4,0.3) 0%, rgba(42,248,4,0) 60%)",
               }}
-              animate={{
-                scale: [1.1, 1.3, 1.1],
-                opacity: [0.4, 0.7, 0.4],
-              }}
-              transition={{
-                duration: 1,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
             />
 
             <motion.svg
@@ -134,42 +246,17 @@ const Park = () => {
               viewBox="0 0 36 31"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
-              animate={{
-                scale: [1, 1.08, 1],
-              }}
-              transition={{
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
               style={{
                 filter: "drop-shadow(0 0 8px rgba(255,255,255,0.3))",
               }}
             >
-              <motion.path
+              <path
                 d="M17.9089 0L0.185966 30.697H35.6318L17.9089 0Z"
                 fill="white"
-                animate={{
-                  opacity: [0.92, 1, 0.92],
-                }}
-                transition={{
-                  duration: 1,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
               />
-              <motion.path
+              <path
                 d="M17.9088 5.22461L4.71089 28.0841H31.1067L17.9088 5.22461Z"
                 fill="#2AF804"
-                animate={{
-                  fill: ["#2AF804", "#40FF1A", "#2AF804"],
-                  filter: ["brightness(1)", "brightness(1.2)", "brightness(1)"],
-                }}
-                transition={{
-                  duration: 1,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
                 style={{
                   filter: "drop-shadow(0 0 3px rgba(42,248,4,0.5))",
                 }}
