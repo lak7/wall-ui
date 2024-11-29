@@ -54,8 +54,10 @@ const Park = () => {
   }, []); // Empty dependency array means this effect runs once on mount
 
   if (isParked && !isFodPresent) {
-    // Redirect to the next page
-    router.push("/select");
+    // Redirect to the next page after 2 seconds
+    setTimeout(() => {
+      router.push("/select");
+    }, 5000);
   }
 
   return (
@@ -76,14 +78,18 @@ const Park = () => {
           transition={{ duration: 0.3 }}
         >
           <motion.div
-            className={`"text-gray-200 ${
+            className={`text-white ${
               isScootyParked && "text-green-500"
-            } text-5xl font-medium tracking-wide relative group"`}
+            } text-5xl font-medium tracking-wide relative group`}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.6 }}
           >
-            <span className="relative inline-block">
+            <span
+              className={`"relative inline-block ${
+                isScootyParked && "text-green-500"
+              }"`}
+            >
               {isScootyParked ? "Vehicle Parked" : "Park your vehicle"}
             </span>
           </motion.div>

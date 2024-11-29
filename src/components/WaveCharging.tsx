@@ -9,7 +9,7 @@ const interThin = Inter({
   variable: "--font-inter",
 });
 
-const WaveCharging = ({ percentage = 0 }) => {
+const WaveCharging = ({ isChargeInit = true, percentage = 0 }) => {
   const [phase, setPhase] = useState(0);
   const [hoverState, setHoverState] = useState(false);
 
@@ -286,7 +286,7 @@ const WaveCharging = ({ percentage = 0 }) => {
                     transform: hoverState ? "scale(1.1)" : "scale(1)",
                   }}
                 >
-                  {percentage}%
+                  {isChargeInit ? percentage : "--"}%
                 </span>
               </div>
             </div>

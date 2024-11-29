@@ -22,6 +22,8 @@ const Charge = () => {
   const timeLeft = useChargingTimer();
   const [power, setPower] = React.useState<number>(0);
   const [energy, setEnergy] = React.useState<number>(0);
+  const [isChargingInitialized, setIsChargingInitialized] =
+    React.useState(false);
 
   // alert(status?.isChargingInitialized);
   React.useEffect(() => {
@@ -40,6 +42,9 @@ const Charge = () => {
       return;
     }
 
+    if (current > 0) {
+      setIsChargingInitialized(true);
+    }
     try {
       // Calculate power in Watts (W)
       const calculatedPower = Number((voltage * current).toFixed(2));
@@ -99,7 +104,9 @@ const Charge = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.6 }}
           >
-            <span className={`${poppins.className} relative`}>Charging</span>
+            <span className={`${poppins.className} relative`}>
+              {isChargingInitialized ? "Charging" : "Initializing Charging"}{" "}
+            </span>
           </motion.div>
         </motion.div>
       </div>
@@ -112,7 +119,8 @@ const Charge = () => {
           transition={{ duration: 0.5, delay: 0.8 }}
         >
           <span className="text-white/90 text-sm font-medium">
-            {SOC}% Charging completed
+            {isChargingInitialized ? SOC + "%" : "--"}
+            Charging completed
           </span>
           <svg
             width="14"
@@ -143,7 +151,7 @@ const Charge = () => {
         {formatTime(timeLeft.seconds)}
       </motion.div> */}
 
-      <WaveCharging percentage={SOC} />
+      <WaveCharging isChargeInit={isChargingInitialized} percentage={SOC} />
 
       <div className="flex w-full justify-center items-center mb-8">
         <Image
