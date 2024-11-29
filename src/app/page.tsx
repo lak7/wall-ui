@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
-  const videoRef = useRef(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -15,10 +15,10 @@ export default function Home() {
         router.push("/connect");
       };
 
-      video.addEventListener("ended", handleVideoEnd);
+      video?.addEventListener("ended", handleVideoEnd);
 
       return () => {
-        video.removeEventListener("ended", handleVideoEnd);
+        video?.removeEventListener("ended", handleVideoEnd);
       };
     }
   }, [router]);
