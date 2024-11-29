@@ -1,10 +1,14 @@
 "use client";
 import WaveCharging from "@/components/WaveCharging";
 import { motion } from "framer-motion";
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Image from "next/image";
 import { Poppins } from "next/font/google";
 import { useBMSData } from "@/hooks/useBMSData";
+import { useChargingTimer } from "@/hooks/useChargingTimer";
+import { useRouter } from "next/navigation";
+import { useChargingStatus } from "@/hooks/useChargingStatus";
+import { stat } from "fs";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -12,13 +16,26 @@ const poppins = Poppins({
 });
 
 const Charge = () => {
+  const router = useRouter();
   const { voltage, current, SOC, loading, error } = useBMSData();
-  const [power, setPower] = useState<number>(0);
-  const [timeLeftToCharge, setTimeLeftToCharge] = useState<number>(0);
-  const [energy, setEnergy] = useState<number>(0);
+  const { status, resetChargingStatus } = useChargingStatus();
+  const timeLeft = useChargingTimer();
+  const [power, setPower] = React.useState<number>(0);
+  const [energy, setEnergy] = React.useState<number>(0);
 
-  useEffect(() => {
-    // Avoid calculations if data isn't loaded or there are errors
+  // alert(status?.isChargingInitialized);
+  React.useEffect(() => {
+    console.log("STATUS IS: ", status.isChargingInitialized);
+    // Redirect if charging is not initialized
+    if (status.isChargingInitialized === false) {
+      const navigationTimer = setTimeout(() => {
+        router.push("/done");
+      }, 1000);
+      return () => clearTimeout(navigationTimer);
+    }
+  }, [status.isChargingInitialized]);
+
+  React.useEffect(() => {
     if (loading || error || !voltage || !current || SOC === undefined) {
       return;
     }
@@ -27,31 +44,26 @@ const Charge = () => {
       // Calculate power in Watts (W)
       const calculatedPower = Number((voltage * current).toFixed(2));
       setPower(calculatedPower);
-
-      // Calculate time left to charge
-      // Assuming battery capacity is 2.3 kWh (2300 Wh)
-      const batteryCapacityWh = 2300;
-      const remainingCapacity = (batteryCapacityWh * (100 - SOC)) / 100;
-      const powerInKW = calculatedPower / 1000;
-
-      // Time in hours = remaining capacity / power
-      const timeInHours = remainingCapacity / (calculatedPower || 1); // Avoid division by zero
-
-      // Convert hours to minutes
-      const timeInMinutes = timeInHours * 60;
-      setTimeLeftToCharge(Number(timeInMinutes.toFixed(2)));
-
       // Calculate energy in kWh
-      const calculatedEnergy = Number((powerInKW * timeInHours).toFixed(2));
+      const powerInKW = calculatedPower / 1000;
+      const totalHours =
+        (status?.duration?.hours || 0) + (status?.duration?.minutes || 0) / 60;
+      const calculatedEnergy = Number((powerInKW * totalHours).toFixed(2));
       setEnergy(calculatedEnergy);
     } catch (err) {
       console.error("Calculation error:", err);
-      // Set default values in case of error
       setPower(0);
-      setTimeLeftToCharge(0);
       setEnergy(0);
     }
-  }, [voltage, current, SOC, loading, error]);
+  }, [
+    voltage,
+    current,
+    SOC,
+    loading,
+    error,
+    status?.duration?.hours,
+    status?.duration?.minutes,
+  ]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -60,6 +72,8 @@ const Charge = () => {
   if (error) {
     return <div>Error: {error}</div>;
   }
+
+  const formatTime = (value: number) => value.toString().padStart(2, "0");
 
   return (
     <div
@@ -117,6 +131,16 @@ const Charge = () => {
         </motion.div>
       </div>
 
+      {/* <motion.div
+        className="flex justify-center items-center mb-6 text-4xl font-bold text-white"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 1.0 }}
+      >
+        {formatTime(timeLeft.hours)}:{formatTime(timeLeft.minutes)}:
+        {formatTime(timeLeft.seconds)}
+      </motion.div> */}
+
       <WaveCharging percentage={SOC} />
 
       <div className="flex w-full justify-center items-center mb-8">
@@ -149,9 +173,10 @@ const Charge = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 1.2 }}
           >
-            Time Left:{" "}
+            Time Remaining:{" "}
             <span className="group-hover:text-cyan-400/90 transition-colors duration-300">
-              {timeLeftToCharge} min
+              {formatTime(timeLeft.hours)}:{formatTime(timeLeft.minutes)}:
+              {formatTime(timeLeft.seconds)}
             </span>
           </motion.div>
 

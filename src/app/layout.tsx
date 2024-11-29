@@ -30,7 +30,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased `}
       >
         <div className="max-h-screen w-full bg-black flex items-center justify-center">
-          <div className="relative w-[768px] h-[1024px] overflow-hidden scale-50">
+          <div className="relative w-[768px] h-[1024px] overflow-hidden">
             <Navbar />
             {children}
           </div>

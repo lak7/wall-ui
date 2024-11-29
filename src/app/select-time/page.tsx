@@ -1,12 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Timer, Zap } from "lucide-react";
+import { ChevronLeft, ChevronRight, Timer, Zap, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useChargingStatus } from "@/hooks/useChargingStatus";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider,
+} from "@/components/ui/tooltip";
 
 export default function Page() {
   const router = useRouter();
@@ -18,11 +24,13 @@ export default function Page() {
 
   const formatNumber = (num: number) => num.toString().padStart(2, "0");
 
+  const getTotalMinutes = () => hours * 60 + minutes;
+
   const incrementValue = (type: "hours" | "minutes") => {
     if (type === "hours") {
       setHours((prev) => (prev < 23 ? prev + 1 : 0));
     } else {
-      setMinutes((prev) => (prev < 55 ? prev + 5 : 0));
+      setMinutes((prev) => (prev < 60 ? prev + 1 : 0));
     }
   };
 
@@ -30,7 +38,7 @@ export default function Page() {
     if (type === "hours") {
       setHours((prev) => (prev > 0 ? prev - 1 : 23));
     } else {
-      setMinutes((prev) => (prev > 0 ? prev - 5 : 55));
+      setMinutes((prev) => (prev > 0 ? prev - 1 : 60));
     }
   };
 
@@ -46,6 +54,13 @@ export default function Page() {
     }
   };
 
+  const handleQuickSelect = (totalMinutes: number) => {
+    const hrs = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+    setHours(hrs);
+    setMinutes(mins);
+  };
+
   const handleSelect = async () => {
     if (hours === 0 && minutes === 0) {
       toast.error("Please select a valid charging duration");
@@ -56,6 +71,7 @@ export default function Page() {
     try {
       const success = await updateChargingStatus(true, { hours, minutes });
       if (success) {
+        toast.success(`Charging scheduled for ${hours}h ${minutes}m`);
         router.push("/charge");
       } else {
         toast.error("Failed to initialize charging");
@@ -88,7 +104,7 @@ export default function Page() {
 
   return (
     <div
-      className="w-[768px] h-[1024px] overflow-hidden bg-[#2A2D32] font-sans pt-7"
+      className="w-[768px] h-[1024px] overflow-hidden bg-transparent font-sans pt-7"
       style={{
         backgroundImage: "url(/main-bg.png)",
         backgroundSize: "cover",
@@ -96,42 +112,77 @@ export default function Page() {
       }}
     >
       <div className="flex justify-center items-center p-1 pt-40 w-full px-8">
-        <Card className="w-full max-w-md bg-neutral-900/90 border-none backdrop-blur-sm shadow-xl">
-          <CardContent className="p-8">
-            <div className="flex flex-col items-center space-y-10">
-              <div className="flex items-center space-x-3 text-credyan-500">
+        <Card className="w-full max-w-md bg-transparent border-none">
+          <CardContent className="border-none p-8">
+            <div className="flex flex-col items-center space-y-8">
+              {/* Header */}
+              <div className="flex items-center space-x-3">
                 <Timer className="w-8 h-8 text-red-500" />
                 <span className="text-xl font-semibold text-white">
                   Set Charging Duration
                 </span>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Info className="w-5 h-5 text-neutral-400" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Select how long you want to charge your vehicle</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
 
+              {/* Quick Select Buttons */}
+              <div className="flex gap-2 w-full justify-center">
+                {[1, 5, 20, 60].map((mins) => (
+                  <Button
+                    key={mins}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleQuickSelect(mins)}
+                    className={`px-3 py-1 text-sm ${
+                      getTotalMinutes() === mins
+                        ? "bg-red-500 text-white border-red-500"
+                        : "text-neutral-400 hover:text-white"
+                    }`}
+                  >
+                    {mins >= 60 ? `${Math.floor(mins / 60)}h` : `${mins}m`}
+                  </Button>
+                ))}
+              </div>
+
+              {/* Time Selection */}
               <div className="flex items-center justify-center w-full space-x-8">
                 <Button
                   variant="outline"
                   className="text-black hover:text-white hover:bg-neutral-950 transition-all duration-200 transform hover:scale-110"
                   onClick={() => decrementValue(step)}
                 >
-                  <ChevronLeft className="w-28 h-28 stroke-2 " />
+                  <ChevronLeft className="w-24 h-24 stroke-2" />
                 </Button>
 
                 <div className="flex items-baseline space-x-3">
                   <div
-                    className={`text-7xl font-bold transition-all duration-300 ${
-                      step === "hours"
-                        ? "text-red-500 scale-110"
-                        : "text-white scale-100"
-                    }`}
+                    className={`text-7xl font-bold transition-all duration-300 cursor-pointer
+                      ${
+                        step === "hours"
+                          ? "text-red-500 scale-110"
+                          : "text-white scale-100 hover:text-red-400"
+                      }`}
+                    onClick={() => setStep("hours")}
                   >
                     {formatNumber(hours)}
                   </div>
                   <div className="text-7xl font-bold text-white">:</div>
                   <div
-                    className={`text-7xl font-bold transition-all duration-300 ${
-                      step === "minutes"
-                        ? "text-red-500 scale-110"
-                        : "text-white scale-100"
-                    }`}
+                    className={`text-7xl font-bold transition-all duration-300 cursor-pointer
+                      ${
+                        step === "minutes"
+                          ? "text-red-500 scale-110"
+                          : "text-white scale-100 hover:text-red-400"
+                      }`}
+                    onClick={() => setStep("minutes")}
                   >
                     {formatNumber(minutes)}
                   </div>
@@ -142,10 +193,11 @@ export default function Page() {
                   className="text-black hover:text-white hover:bg-neutral-950 transition-all duration-200 transform hover:scale-110"
                   onClick={() => incrementValue(step)}
                 >
-                  <ChevronRight className="w-27 h-27 stroke-2" />
+                  <ChevronRight className="w-24 h-24 stroke-2" />
                 </Button>
               </div>
 
+              {/* Navigation Buttons */}
               <div className="flex justify-center space-x-4 w-full">
                 {step === "minutes" && (
                   <Button
@@ -165,17 +217,30 @@ export default function Page() {
                   </Button>
                 ) : (
                   <Button
-                    className="w-40 h-12 text-lg bg-red-500 hover:bg-red-600 text-white font-semibold transition-all duration-200 hover:scale-105"
+                    className="w-40 h-12 text-lg bg-red-500 hover:bg-red-600 text-white font-semibold transition-all duration-200 hover:scale-105 disabled:opacity-50"
                     onClick={handleSelect}
+                    disabled={isLoading || (hours === 0 && minutes === 0)}
                   >
-                    <Zap className="w-5 h-5 mr-2" />
-                    Initialize
+                    {isLoading ? (
+                      "Loading..."
+                    ) : (
+                      <>
+                        <Zap className="w-5 h-5 mr-2" />
+                        Initialize
+                      </>
+                    )}
                   </Button>
                 )}
               </div>
 
-              <div className="text-base text-neutral-400 font-medium">
-                {step === "hours" ? "Select Hours" : "Select Minutes"}
+              {/* Helper Text */}
+              <div className="flex flex-col items-center space-y-2">
+                <div className="text-base text-neutral-400 font-medium">
+                  {step === "hours" ? "Select Hours" : "Select Minutes"}
+                </div>
+                <div className="text-sm text-neutral-500">
+                  Total Duration: {hours}h {minutes}m
+                </div>
               </div>
             </div>
           </CardContent>

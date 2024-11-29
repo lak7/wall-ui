@@ -62,7 +62,7 @@ const Select = () => {
                   key={option.id}
                   onClick={handleSelect}
                 >
-                  <div className="w-full flex justify-between">
+                  <div className="w-full text-white flex justify-between">
                     {option.text}
                     <div className="">
                       <Zap className="text-cyan-300 w-7 h-7" />
