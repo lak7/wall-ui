@@ -1,7 +1,7 @@
 "use client";
 import WaveCharging from "@/components/WaveCharging";
 import { motion } from "framer-motion";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { Poppins } from "next/font/google";
 import { useBMSData } from "@/hooks/useBMSData";
@@ -9,6 +9,8 @@ import { useChargingTimer } from "@/hooks/useChargingTimer";
 import { useRouter } from "next/navigation";
 import { useChargingStatus } from "@/hooks/useChargingStatus";
 import { ChargingPadWarning } from "@/components/FodDialog";
+import { onValue, ref } from "firebase/database";
+import { database } from "@/config/firebase";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -20,25 +22,59 @@ const Charge = () => {
   const { voltage, current, SOC, isReceiverCoilDetected, loading, error } =
     useBMSData();
   const { status, resetChargingStatus } = useChargingStatus();
-  const timeLeft = useChargingTimer();
+  const [isScootyParked, setIsScootyParked] = useState(true);
+  const { timeLeft, pauseTimer, resumeTimer } = useChargingTimer(); // Updated to use pause features
   const [power, setPower] = React.useState<number>(0);
   const [energy, setEnergy] = React.useState<number>(0);
   const [isChargingInitialized, setIsChargingInitialized] =
     React.useState(false);
 
-  // alert(status?.isChargingInitialized);
-  React.useEffect(() => {
-    console.log("STATUS IS: ", status.isChargingInitialized);
-    // Redirect if charging is not initialized
-    if (status.isChargingInitialized === false) {
-      const navigationTimer = setTimeout(() => {
-        router.push("/done");
-      }, 1000);
-      return () => clearTimeout(navigationTimer);
-    }
-  }, [status.isChargingInitialized]);
+  // Format time helper function
+  const formatTime = (value: number) => value.toString().padStart(2, "0");
 
-  React.useEffect(() => {
+  // Effect for Firebase listeners
+  useEffect(() => {
+    try {
+      const coilRef = ref(database, "IsReceiverCoilDetected");
+      const fodRef = ref(database, "Is_FOD_Present");
+
+      let unsubscribeFod: (() => void) | undefined;
+
+      const unsubscribeCoil = onValue(coilRef, (coilSnapshot) => {
+        if (unsubscribeFod) {
+          unsubscribeFod();
+        }
+
+        unsubscribeFod = onValue(fodRef, (fodSnapshot) => {
+          const isCoilDetected = coilSnapshot.val();
+          const isFodPresent = fodSnapshot.val();
+          setIsScootyParked(isCoilDetected);
+        });
+      });
+
+      return () => {
+        unsubscribeCoil();
+        if (unsubscribeFod) {
+          unsubscribeFod();
+        }
+      };
+    } catch (error) {
+      console.error("Error setting up Firebase listeners:", error);
+    }
+  }, []);
+
+  // Effect for charging status
+  // useEffect(() => {
+  //   if (status.isChargingInitialized === false) {
+  //     const navigationTimer = setTimeout(() => {
+  //       router.push("/done");
+  //     }, 1000);
+  //     return () => clearTimeout(navigationTimer);
+  //   }
+  // }, [status.isChargingInitialized, router]);
+
+  // Effect for power and energy calculations
+  useEffect(() => {
     if (loading || error || !voltage || !current || SOC === undefined) {
       return;
     }
@@ -46,11 +82,11 @@ const Charge = () => {
     if (current > 0) {
       setIsChargingInitialized(true);
     }
+
     try {
-      // Calculate power in Watts (W)
       const calculatedPower = Number((voltage * current).toFixed(2));
       setPower(calculatedPower);
-      // Calculate energy in kWh
+
       const powerInKW = calculatedPower / 1000;
       const totalHours =
         (status?.duration?.hours || 0) + (status?.duration?.minutes || 0) / 60;
@@ -71,21 +107,31 @@ const Charge = () => {
     status?.duration?.minutes,
   ]);
 
+  // Updated effect for parking status with timer pause
+  useEffect(() => {
+    if (isScootyParked === false) {
+      pauseTimer(); // Pause the timer when scooter is not parked
+      // router.push("/park");
+    } else {
+      resumeTimer(); // Resume the timer when scooter is parked again
+    }
+  }, [isScootyParked, router, pauseTimer, resumeTimer]);
+
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="w-[768px] h-[1024px] flex items-center justify-center bg-[#2A2D32]">
+        Loading...
+      </div>
+    );
   }
 
   if (error) {
-    return <div>Error: {error}</div>;
+    return (
+      <div className="w-[768px] h-[1024px] flex items-center justify-center bg-[#2A2D32]">
+        Error: {error}
+      </div>
+    );
   }
-
-  const formatTime = (value: number) => value.toString().padStart(2, "0");
-
-  if (isReceiverCoilDetected === false) {
-    router.push("/park");
-  }
-
-  // return <ChargingPadWarning />;
 
   return (
     <div
@@ -109,8 +155,16 @@ const Charge = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.6 }}
           >
-            <span className={`${poppins.className} relative`}>
-              {isChargingInitialized ? "Charging" : "Initializing Charging"}{" "}
+            <span
+              className={`${poppins.className} relative ${
+                isScootyParked ? "" : "text-red-500"
+              }`}
+            >
+              {isScootyParked
+                ? isChargingInitialized
+                  ? "Charging"
+                  : "Initializing Charging"
+                : "Park your vehicle"}
             </span>
           </motion.div>
         </motion.div>
@@ -144,16 +198,6 @@ const Charge = () => {
           </svg>
         </motion.div>
       </div>
-
-      {/* <motion.div
-        className="flex justify-center items-center mb-6 text-4xl font-bold text-white"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 1.0 }}
-      >
-        {formatTime(timeLeft.hours)}:{formatTime(timeLeft.minutes)}:
-        {formatTime(timeLeft.seconds)}
-      </motion.div> */}
 
       <WaveCharging isChargeInit={isChargingInitialized} percentage={SOC} />
 
@@ -205,8 +249,6 @@ const Charge = () => {
               {current} A
             </span>
           </motion.div>
-
-          {/* <ChargingPadWarning /> */}
 
           <motion.div
             className="group shadow-[0_0_0_1px_rgba(255,255,255,0.1)_inset] px-8 py-4 bg-black/20 backdrop-blur-sm rounded-lg text-gray-400 text-xl font-bold w-full text-center hover:shadow-[0_0_0_1px_rgba(6,182,212,0.2)_inset] transition-all duration-300 hover:bg-black/30"

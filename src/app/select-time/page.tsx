@@ -14,10 +14,13 @@ import {
   TooltipProvider,
 } from "@/components/ui/tooltip";
 import { useBMSData } from "@/hooks/useBMSData";
+import { onValue, ref } from "firebase/database";
+import { database } from "@/config/firebase";
 
 export default function Page() {
   const router = useRouter();
   const { updateChargingStatus, status } = useChargingStatus();
+  const [isScootyParked, setIsScootyParked] = useState(true);
   const [step, setStep] = useState<"hours" | "minutes">("hours");
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
@@ -105,7 +108,47 @@ export default function Page() {
     updateChargingStatus,
   ]);
 
-  if (isReceiverCoilDetected === false) {
+  useEffect(() => {
+    try {
+      // Create references to both paths using the imported database instance
+      const coilRef = ref(database, "IsReceiverCoilDetected");
+      const fodRef = ref(database, "Is_FOD_Present");
+
+      let unsubscribeFod: (() => void) | undefined;
+
+      // Set up listeners for both values
+      const unsubscribeCoil = onValue(coilRef, (coilSnapshot) => {
+        if (unsubscribeFod) {
+          unsubscribeFod(); // Clean up previous FOD listener if it exists
+        }
+
+        // Set up new FOD listener
+        unsubscribeFod = onValue(fodRef, (fodSnapshot) => {
+          const isCoilDetected = coilSnapshot.val();
+          const isFodPresent = fodSnapshot.val();
+
+          setIsScootyParked(isCoilDetected);
+
+          console.log("Coil Detection:", isCoilDetected);
+          console.log("FOD Present:", isFodPresent);
+
+          // Update isParked based on both conditions
+        });
+      });
+
+      // Clean up listeners on component unmount
+      return () => {
+        unsubscribeCoil();
+        if (unsubscribeFod) {
+          unsubscribeFod();
+        }
+      };
+    } catch (error) {
+      console.error("Error setting up Firebase listeners:", error);
+    }
+  }, []);
+
+  if (isScootyParked === false) {
     router.push("/park");
   }
 

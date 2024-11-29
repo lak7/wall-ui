@@ -8,8 +8,18 @@ interface TimeLeft {
   seconds: number;
 }
 
-export const useChargingTimer = () => {
+interface ChargingTimerReturn {
+  timeLeft: TimeLeft;
+  isPaused: boolean;
+  pauseTimer: () => void;
+  resumeTimer: () => void;
+  resetTimer: () => void;
+}
+
+export const useChargingTimer = (): ChargingTimerReturn => {
   const { status, resetChargingStatus } = useChargingStatus();
+  const [isPaused, setIsPaused] = useState(false);
+  const [pausedTimeLeft, setPausedTimeLeft] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({
     hours: 0,
     minutes: 0,
@@ -19,16 +29,21 @@ export const useChargingTimer = () => {
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
-    if (status?.isChargingInitialized && status?.duration?.endTime) {
+    if (
+      status?.isChargingInitialized &&
+      status?.duration?.endTime &&
+      !isPaused
+    ) {
       interval = setInterval(() => {
         const now = Date.now();
-        const endTime = status.duration.endTime!;
+        const endTime = pausedTimeLeft || status.duration.endTime!;
         const difference = endTime - now;
 
         if (difference <= 0) {
           clearInterval(interval);
           resetChargingStatus();
           setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
+          setPausedTimeLeft(null);
           return;
         }
 
@@ -41,8 +56,6 @@ export const useChargingTimer = () => {
 
         setTimeLeft({ hours, minutes, seconds });
       }, 1000);
-    } else {
-      setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
     }
 
     return () => {
@@ -54,7 +67,39 @@ export const useChargingTimer = () => {
     status?.isChargingInitialized,
     status?.duration?.endTime,
     resetChargingStatus,
+    isPaused,
+    pausedTimeLeft,
   ]);
 
-  return timeLeft;
+  const pauseTimer = () => {
+    if (!isPaused && status?.duration?.endTime) {
+      setIsPaused(true);
+      // Store the remaining time when paused
+      setPausedTimeLeft(status.duration.endTime);
+    }
+  };
+
+  const resumeTimer = () => {
+    if (isPaused && pausedTimeLeft) {
+      // Calculate new end time based on remaining time
+      const newEndTime = Date.now() + (pausedTimeLeft - Date.now());
+      setIsPaused(false);
+      setPausedTimeLeft(newEndTime);
+    }
+  };
+
+  const resetTimer = () => {
+    setIsPaused(false);
+    setPausedTimeLeft(null);
+    setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
+    resetChargingStatus();
+  };
+
+  return {
+    timeLeft,
+    isPaused,
+    pauseTimer,
+    resumeTimer,
+    resetTimer,
+  };
 };
