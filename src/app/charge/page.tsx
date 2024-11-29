@@ -17,7 +17,8 @@ const poppins = Poppins({
 
 const Charge = () => {
   const router = useRouter();
-  const { voltage, current, SOC, loading, error } = useBMSData();
+  const { voltage, current, SOC, isReceiverCoilDetected, loading, error } =
+    useBMSData();
   const { status, resetChargingStatus } = useChargingStatus();
   const timeLeft = useChargingTimer();
   const [power, setPower] = React.useState<number>(0);
@@ -80,6 +81,10 @@ const Charge = () => {
 
   const formatTime = (value: number) => value.toString().padStart(2, "0");
 
+  if (isReceiverCoilDetected === false) {
+    router.push("/park");
+  }
+
   // return <ChargingPadWarning />;
 
   return (
@@ -119,8 +124,7 @@ const Charge = () => {
           transition={{ duration: 0.5, delay: 0.8 }}
         >
           <span className="text-white/90 text-sm font-medium">
-            {isChargingInitialized ? SOC + "%" : "--"}
-            Charging completed
+            {SOC + "% "}Charged
           </span>
           <svg
             width="14"

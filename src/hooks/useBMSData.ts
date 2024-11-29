@@ -7,6 +7,7 @@ interface BMSData {
   voltage: number;
   current: number;
   SOC: number;
+  isReceiverCoilDetected: boolean;
   loading: boolean;
   error: string | null;
 }
@@ -16,12 +17,14 @@ export const useBMSData = () => {
     voltage: 0,
     current: 0,
     SOC: 0,
+    isReceiverCoilDetected: false,
     loading: true,
     error: null,
   });
 
   useEffect(() => {
-    const bmsRef = ref(database, "BMSData/latest");
+    // Changed reference path to read from root BMSData
+    const bmsRef = ref(database, "BMSData");
 
     const unsubscribe = onValue(
       bmsRef,
@@ -29,7 +32,10 @@ export const useBMSData = () => {
         if (snapshot.exists()) {
           const data = snapshot.val();
           setBMSData({
-            ...data,
+            voltage: data.latest?.voltage ?? 0,
+            current: data.latest?.current ?? 0,
+            SOC: data.latest?.SOC ?? 0,
+            isReceiverCoilDetected: data.IsReceiverCoilDetected ?? false,
             loading: false,
             error: null,
           });

@@ -13,6 +13,7 @@ import {
   TooltipTrigger,
   TooltipProvider,
 } from "@/components/ui/tooltip";
+import { useBMSData } from "@/hooks/useBMSData";
 
 export default function Page() {
   const router = useRouter();
@@ -21,6 +22,8 @@ export default function Page() {
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const { voltage, current, SOC, isReceiverCoilDetected, loading, error } =
+    useBMSData();
 
   const formatNumber = (num: number) => num.toString().padStart(2, "0");
 
@@ -101,6 +104,10 @@ export default function Page() {
     status?.duration?.endTime,
     updateChargingStatus,
   ]);
+
+  if (isReceiverCoilDetected === false) {
+    router.push("/park");
+  }
 
   return (
     <div

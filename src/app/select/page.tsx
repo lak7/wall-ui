@@ -1,6 +1,7 @@
 // src/app/page.tsx
 "use client";
 import { ChargingPadWarning } from "@/components/FodDialog";
+import { useBMSData } from "@/hooks/useBMSData";
 import { motion } from "framer-motion";
 import { Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -13,6 +14,8 @@ interface ChargingOption {
 
 const Select = () => {
   const router = useRouter();
+  const { voltage, current, SOC, isReceiverCoilDetected, loading, error } =
+    useBMSData();
 
   const handleSelect = async () => {
     try {
@@ -27,6 +30,10 @@ const Select = () => {
     { id: 2, text: "Charge by Time" },
     { id: 3, text: "Charge by ₹" },
   ];
+
+  if (isReceiverCoilDetected === false) {
+    router.push("/park");
+  }
 
   return (
     <div

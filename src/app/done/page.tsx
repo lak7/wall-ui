@@ -10,8 +10,8 @@ const Page = () => {
         backgroundPosition: "center",
       }}
     >
-      <div className="flex justify-center items-center p-1 pt-20 w-full px-8 text-green-500 text-5xl">
-        DONE
+      <div className="flex justify-center items-center p-1 pt-40 w-full px-8 text-green-500 text-5xl">
+        THANKS FOR CHARGING
       </div>
     </div>
   );

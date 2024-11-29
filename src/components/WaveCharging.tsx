@@ -286,7 +286,7 @@ const WaveCharging = ({ isChargeInit = true, percentage = 0 }) => {
                     transform: hoverState ? "scale(1.1)" : "scale(1)",
                   }}
                 >
-                  {isChargeInit ? percentage : "--"}%
+                  {percentage}%
                 </span>
               </div>
             </div>
