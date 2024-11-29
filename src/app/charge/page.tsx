@@ -9,7 +9,7 @@ import { useChargingTimer } from "@/hooks/useChargingTimer";
 import { useRouter } from "next/navigation";
 import { useChargingStatus } from "@/hooks/useChargingStatus";
 import { ChargingPadWarning } from "@/components/FodDialog";
-import { onValue, ref } from "firebase/database";
+import { onValue, ref, set } from "firebase/database";
 import { database } from "@/config/firebase";
 
 const poppins = Poppins({
@@ -75,12 +75,15 @@ const Charge = () => {
 
   // Effect for power and energy calculations
   useEffect(() => {
+    setPower(0);
     if (loading || error || !voltage || !current || SOC === undefined) {
       return;
     }
 
     if (current > 0) {
       setIsChargingInitialized(true);
+    } else {
+      setPower(0);
     }
 
     try {
@@ -162,7 +165,9 @@ const Charge = () => {
             >
               {isScootyParked
                 ? isChargingInitialized
-                  ? "Charging"
+                  ? current <= 0
+                    ? "Charging Paused"
+                    : "Charging"
                   : "Initializing Charging"
                 : "Park your vehicle"}
             </span>
