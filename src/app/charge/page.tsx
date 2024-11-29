@@ -8,7 +8,7 @@ import { useBMSData } from "@/hooks/useBMSData";
 import { useChargingTimer } from "@/hooks/useChargingTimer";
 import { useRouter } from "next/navigation";
 import { useChargingStatus } from "@/hooks/useChargingStatus";
-import { stat } from "fs";
+import { ChargingPadWarning } from "@/components/FodDialog";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -74,6 +74,8 @@ const Charge = () => {
   }
 
   const formatTime = (value: number) => value.toString().padStart(2, "0");
+
+  // return <ChargingPadWarning />;
 
   return (
     <div
@@ -191,6 +193,8 @@ const Charge = () => {
               {current} A
             </span>
           </motion.div>
+
+          {/* <ChargingPadWarning /> */}
 
           <motion.div
             className="group shadow-[0_0_0_1px_rgba(255,255,255,0.1)_inset] px-8 py-4 bg-black/20 backdrop-blur-sm rounded-lg text-gray-400 text-xl font-bold w-full text-center hover:shadow-[0_0_0_1px_rgba(6,182,212,0.2)_inset] transition-all duration-300 hover:bg-black/30"

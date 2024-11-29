@@ -82,7 +82,7 @@ const ForeignObjectDetection = () => {
               transition={{ duration: 0.5 }}
             >
               <Image
-                src="/https://static.vecteezy.com/system/resources/thumbnails/015/734/136/small_2x/black-circle-icon-geometry-silhouette-png.png"
+                src="/dash-logo.png"
                 alt="Foreign object"
                 width={50}
                 height={50}

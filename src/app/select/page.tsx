@@ -1,5 +1,6 @@
 // src/app/page.tsx
 "use client";
+import { ChargingPadWarning } from "@/components/FodDialog";
 import { motion } from "framer-motion";
 import { Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -36,6 +37,7 @@ const Select = () => {
         backgroundPosition: "center",
       }}
     >
+      <ChargingPadWarning />
       {/* Hero Section */}
       <div className="flex justify-center items-center p-1 pt-40 w-full px-8">
         <motion.div

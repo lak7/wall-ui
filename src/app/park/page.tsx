@@ -1,10 +1,63 @@
 "use client";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { ref, onValue, set } from "firebase/database";
+import { database } from "@/config/firebase";
+import { useRouter } from "next/navigation";
 
 const Park = () => {
+  const router = useRouter();
   const [isParked, setIsParked] = useState(false);
+  const [isScootyParked, setIsScootyParked] = useState(false);
+  const [isFodPresent, setIsFodPresent] = useState(false);
+
+  useEffect(() => {
+    try {
+      // Create references to both paths using the imported database instance
+      const coilRef = ref(database, "IsReceiverCoilDetected");
+      const fodRef = ref(database, "Is_FOD_Present");
+
+      let unsubscribeFod: (() => void) | undefined;
+
+      // Set up listeners for both values
+      const unsubscribeCoil = onValue(coilRef, (coilSnapshot) => {
+        if (unsubscribeFod) {
+          unsubscribeFod(); // Clean up previous FOD listener if it exists
+        }
+
+        // Set up new FOD listener
+        unsubscribeFod = onValue(fodRef, (fodSnapshot) => {
+          const isCoilDetected = coilSnapshot.val();
+          const isFodPresent = fodSnapshot.val();
+          setIsFodPresent(isFodPresent);
+          setIsScootyParked(isCoilDetected);
+
+          console.log("Coil Detection:", isCoilDetected);
+          console.log("FOD Present:", isFodPresent);
+
+          // Update isParked based on both conditions
+          setIsParked(isCoilDetected === true && isFodPresent === false);
+        });
+      });
+
+      // Clean up listeners on component unmount
+      return () => {
+        unsubscribeCoil();
+        if (unsubscribeFod) {
+          unsubscribeFod();
+        }
+      };
+    } catch (error) {
+      console.error("Error setting up Firebase listeners:", error);
+    }
+  }, []); // Empty dependency array means this effect runs once on mount
+
+  if (isParked && !isFodPresent) {
+    // Redirect to the next page
+    router.push("/select");
+  }
+
   return (
     <div
       className="w-[768px] h-[1024px] overflow-hidden bg-[#2A2D32] font-sans pt-7"
@@ -23,68 +76,24 @@ const Park = () => {
           transition={{ duration: 0.3 }}
         >
           <motion.div
-            className="text-gray-200 text-5xl font-medium tracking-wide relative group"
+            className={`"text-gray-200 ${
+              isScootyParked && "text-green-500"
+            } text-5xl font-medium tracking-wide relative group"`}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.6 }}
           >
-            <span className="relative inline-block">Park your vehicle</span>
+            <span className="relative inline-block">
+              {isScootyParked ? "Vehicle Parked" : "Park your vehicle"}
+            </span>
           </motion.div>
+          <div className="w-full"></div>
+          <span className="text-red-500 text-3xl text-center font-medium w-full">
+            {isFodPresent && "remove foreign object"}
+          </span>
         </motion.div>
       </div>
       <div className="absolute w-full flex justify-center items-center">
-        {/* <svg
-          width="346"
-          height="509"
-          viewBox="0 0 346 509"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <line
-            y1="-3"
-            x2="509"
-            y2="-3"
-            transform="matrix(-4.37114e-08 -1 -1 4.37114e-08 340 509)"
-            stroke="url(#paint0_linear_0_1)"
-            stroke-width="6"
-          />
-          <line
-            y1="-3"
-            x2="509"
-            y2="-3"
-            transform="matrix(-4.37114e-08 -1 -1 4.37114e-08 0 509)"
-            stroke="url(#paint1_linear_0_1)"
-            stroke-width="6"
-          />
-          <defs>
-            <linearGradient
-              id="paint0_linear_0_1"
-              x1="0"
-              y1="0.5"
-              x2="509"
-              y2="0.5"
-              gradientUnits="userSpaceOnUse"
-            >
-              <stop stop-color="#2C78FA" />
-              <stop offset="0.312404" stop-color="#24BEC7" />
-              <stop offset="0.661947" stop-color="#27C72C" />
-              <stop offset="1" stop-color="#24D522" />
-            </linearGradient>
-            <linearGradient
-              id="paint1_linear_0_1"
-              x1="0"
-              y1="0.5"
-              x2="509"
-              y2="0.5"
-              gradientUnits="userSpaceOnUse"
-            >
-              <stop stop-color="#2C78FA" />
-              <stop offset="0.312404" stop-color="#24BEC7" />
-              <stop offset="0.661947" stop-color="#27C72C" />
-              <stop offset="1" stop-color="#24D522" />
-            </linearGradient>
-          </defs>
-        </svg> */}
         <svg
           width="346"
           height="509"
@@ -98,7 +107,7 @@ const Park = () => {
             y2="-3"
             transform="matrix(-4.37114e-08 -1 -1 4.37114e-08 340 509)"
             stroke="url(#paint0_linear_0_1)"
-            stroke-width="6"
+            strokeWidth="6"
           >
             <animate
               attributeName="stroke-dasharray"
@@ -114,7 +123,7 @@ const Park = () => {
             y2="-3"
             transform="matrix(-4.37114e-08 -1 -1 4.37114e-08 0 509)"
             stroke="url(#paint1_linear_0_1)"
-            stroke-width="6"
+            strokeWidth="6"
           >
             <animate
               attributeName="stroke-dasharray"
@@ -133,10 +142,10 @@ const Park = () => {
               y2="0.5"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stop-color="#2C78FA" />
-              <stop offset="0.312404" stop-color="#24BEC7" />
-              <stop offset="0.661947" stop-color="#27C72C" />
-              <stop offset="1" stop-color="#24D522" />
+              <stop stopColor="#2C78FA" />
+              <stop offset="0.312404" stopColor="#24BEC7" />
+              <stop offset="0.661947" stopColor="#27C72C" />
+              <stop offset="1" stopColor="#24D522" />
             </linearGradient>
             <linearGradient
               id="paint1_linear_0_1"
@@ -146,65 +155,13 @@ const Park = () => {
               y2="0.5"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stop-color="#2C78FA" />
-              <stop offset="0.312404" stop-color="#24BEC7" />
-              <stop offset="0.661947" stop-color="#27C72C" />
-              <stop offset="1" stop-color="#24D522" />
+              <stop stopColor="#2C78FA" />
+              <stop offset="0.312404" stopColor="#24BEC7" />
+              <stop offset="0.661947" stopColor="#27C72C" />
+              <stop offset="1" stopColor="#24D522" />
             </linearGradient>
           </defs>
         </svg>
-
-        {/* <svg
-          width="336"
-          height="449"
-          viewBox="0 0 336 449"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <mask
-            id="mask0_11_320"
-            style={{ maskType: "alpha" }}
-            maskUnits="userSpaceOnUse"
-            x="0"
-            y="0"
-            width="336"
-            height="449"
-          >
-            <motion.path
-              d="M3 0V448.5M333 448.5V0"
-              stroke="black"
-              strokeWidth="5"
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ duration: 2.5, ease: "easeInOut" }}
-            />
-          </mask>
-          <g mask="url(#mask0_11_320)">
-            <rect
-              x="-109"
-              y="-115.5"
-              width="572"
-              height="733"
-              fill="url(#paint0_linear_11_320)"
-            />
-          </g>
-          <defs>
-            <linearGradient
-              id="paint0_linear_11_320"
-              x1="177"
-              y1="-115.5"
-              x2="177"
-              y2="617.5"
-              gradientUnits="userSpaceOnUse"
-            >
-              <stop stopColor="#1AFF4F" />
-              <stop offset="0.236666" stopColor="#29C20E" />
-              <stop offset="0.486666" stopColor="#20DFAF" />
-              <stop offset="0.781666" stopColor="#2D73FF" />
-              <stop offset="1" stopColor="#008BF5" />
-            </linearGradient>
-          </defs>
-        </svg> */}
       </div>
       <div className="w-full flex justify-center items-center">
         <div className="flex-col justify-center items-center">
@@ -278,9 +235,9 @@ const Park = () => {
           transition={{
             duration: 3,
             times: [0, 0.66, 1],
-            repeat: isParked ? 0 : Infinity, // Stop repetition if isParked is true
-            repeatType: "loop", // Key change: use "loop" instead of "reverse"
-            ease: "easeInOut", // Smooth easing
+            repeat: isParked ? 0 : Infinity,
+            repeatType: "loop",
+            ease: "easeInOut",
           }}
         >
           <Image
