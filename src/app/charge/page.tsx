@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { Poppins } from "next/font/google";
+import { useBMSData } from "@/hooks/useBMSData";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -11,17 +12,54 @@ const poppins = Poppins({
 });
 
 const Charge = () => {
-  const [demoPercentage, setDemoPercentage] = useState(15);
+  const { voltage, current, SOC, loading, error } = useBMSData();
+  const [power, setPower] = useState<number>(0);
+  const [timeLeftToCharge, setTimeLeftToCharge] = useState<number>(0);
+  const [energy, setEnergy] = useState<number>(0);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setDemoPercentage((prev) => {
-        if (prev >= 100) return 0;
-        return prev + 1;
-      });
-    }, 100);
-    return () => clearInterval(interval);
-  }, []);
+    // Avoid calculations if data isn't loaded or there are errors
+    if (loading || error || !voltage || !current || SOC === undefined) {
+      return;
+    }
+
+    try {
+      // Calculate power in Watts (W)
+      const calculatedPower = Number((voltage * current).toFixed(2));
+      setPower(calculatedPower);
+
+      // Calculate time left to charge
+      // Assuming battery capacity is 2.3 kWh (2300 Wh)
+      const batteryCapacityWh = 2300;
+      const remainingCapacity = (batteryCapacityWh * (100 - SOC)) / 100;
+      const powerInKW = calculatedPower / 1000;
+
+      // Time in hours = remaining capacity / power
+      const timeInHours = remainingCapacity / (calculatedPower || 1); // Avoid division by zero
+
+      // Convert hours to minutes
+      const timeInMinutes = timeInHours * 60;
+      setTimeLeftToCharge(Number(timeInMinutes.toFixed(2)));
+
+      // Calculate energy in kWh
+      const calculatedEnergy = Number((powerInKW * timeInHours).toFixed(2));
+      setEnergy(calculatedEnergy);
+    } catch (err) {
+      console.error("Calculation error:", err);
+      // Set default values in case of error
+      setPower(0);
+      setTimeLeftToCharge(0);
+      setEnergy(0);
+    }
+  }, [voltage, current, SOC, loading, error]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
     <div
@@ -32,10 +70,6 @@ const Charge = () => {
         backgroundPosition: "center",
       }}
     >
-      {/* Ambient Glow */}
-      {/* <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-cyan-500/5 to-transparent pointer-events-none" /> */}
-
-      {/* Hero Section */}
       <div className="flex justify-center items-center p-1 pt-20 w-full px-8">
         <motion.div
           className="text-left flex-col gap-2 mb-12 relative"
@@ -49,7 +83,7 @@ const Charge = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.6 }}
           >
-            <span className={`${poppins.className} relative `}>Charging</span>
+            <span className={`${poppins.className} relative`}>Charging</span>
           </motion.div>
         </motion.div>
       </div>
@@ -62,7 +96,7 @@ const Charge = () => {
           transition={{ duration: 0.5, delay: 0.8 }}
         >
           <span className="text-white/90 text-sm font-medium">
-            {demoPercentage}% Charging completed
+            {SOC}% Charging completed
           </span>
           <svg
             width="14"
@@ -83,67 +117,66 @@ const Charge = () => {
         </motion.div>
       </div>
 
-      <WaveCharging percentage={demoPercentage} />
+      <WaveCharging percentage={SOC} />
 
       <div className="flex w-full justify-center items-center mb-8">
         <Image
           src="/charging-scooty.png"
           alt="Charger pad"
           width={500}
-          height={500}
+          height={300}
           className="drop-shadow-[0_0_15px_rgba(6,182,212,0.15)]"
         />
       </div>
 
-      {/* Stats Section */}
       <div className="w-full px-12 mt-12">
         <div className="grid grid-cols-2 gap-6">
-          {/* Top Row */}
           <motion.div
             className="group shadow-[0_0_0_1px_rgba(255,255,255,0.1)_inset] px-8 py-4 bg-black/20 backdrop-blur-sm rounded-lg text-gray-400 text-xl font-bold w-full text-center hover:shadow-[0_0_0_1px_rgba(6,182,212,0.2)_inset] transition-all duration-300 hover:bg-black/30"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 1.0 }}
           >
-            <span className="group-hover:text-cyan-400/90 transition-colors duration-300">
-              15
-            </span>{" "}
-            : km Range
+            <span className="text-nowrap">Energy: </span>
+            <span className="group-hover:text-cyan-400/90 transition-colors duration-300 text-nowrap">
+              {energy} kWh
+            </span>
           </motion.div>
+
           <motion.div
             className="group shadow-[0_0_0_1px_rgba(255,255,255,0.1)_inset] px-8 py-4 bg-black/20 backdrop-blur-sm rounded-lg text-gray-400 text-xl font-bold w-full text-center hover:shadow-[0_0_0_1px_rgba(6,182,212,0.2)_inset] transition-all duration-300 hover:bg-black/30"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 1.2 }}
           >
+            Time Left:{" "}
             <span className="group-hover:text-cyan-400/90 transition-colors duration-300">
-              00h 45mins
-            </span>{" "}
-            : Time to 30%
+              {timeLeftToCharge} min
+            </span>
           </motion.div>
 
-          {/* Bottom Row */}
           <motion.div
             className="group shadow-[0_0_0_1px_rgba(255,255,255,0.1)_inset] px-8 py-4 bg-black/20 backdrop-blur-sm rounded-lg text-gray-400 text-xl font-bold w-full text-center hover:shadow-[0_0_0_1px_rgba(6,182,212,0.2)_inset] transition-all duration-300 hover:bg-black/30"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 1.4 }}
           >
+            Charging Current:{" "}
             <span className="group-hover:text-cyan-400/90 transition-colors duration-300">
-              10A
-            </span>{" "}
-            : Charging Current
+              {current} A
+            </span>
           </motion.div>
+
           <motion.div
             className="group shadow-[0_0_0_1px_rgba(255,255,255,0.1)_inset] px-8 py-4 bg-black/20 backdrop-blur-sm rounded-lg text-gray-400 text-xl font-bold w-full text-center hover:shadow-[0_0_0_1px_rgba(6,182,212,0.2)_inset] transition-all duration-300 hover:bg-black/30"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 1.6 }}
           >
+            Power:{" "}
             <span className="group-hover:text-cyan-400/90 transition-colors duration-300">
-              20V
-            </span>{" "}
-            : Voltage
+              {power} W
+            </span>
           </motion.div>
         </div>
       </div>

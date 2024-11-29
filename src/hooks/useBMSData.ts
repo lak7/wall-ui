@@ -1,42 +1,40 @@
-// hooks/useSensorData.ts
+// hooks/useBMSData.ts
 import { useState, useEffect } from "react";
 import { ref, onValue, off } from "firebase/database";
 import { database } from "@/config/firebase";
 
-interface SensorData {
-  thermal: number;
-  current: number;
+interface BMSData {
   voltage: number;
-  timestamp: number;
+  current: number;
+  SOC: number;
   loading: boolean;
   error: string | null;
 }
 
-export const useSensorData = () => {
-  const [sensorData, setSensorData] = useState<SensorData>({
-    thermal: 0,
-    current: 0,
+export const useBMSData = () => {
+  const [bmsData, setBMSData] = useState<BMSData>({
     voltage: 0,
-    timestamp: 0,
+    current: 0,
+    SOC: 0,
     loading: true,
     error: null,
   });
 
   useEffect(() => {
-    const sensorRef = ref(database, "sensor_readings/latest");
+    const bmsRef = ref(database, "BMSData/latest");
 
     const unsubscribe = onValue(
-      sensorRef,
+      bmsRef,
       (snapshot) => {
         if (snapshot.exists()) {
           const data = snapshot.val();
-          setSensorData({
+          setBMSData({
             ...data,
             loading: false,
             error: null,
           });
         } else {
-          setSensorData((prev) => ({
+          setBMSData((prev) => ({
             ...prev,
             loading: false,
             error: "No data available",
@@ -44,7 +42,7 @@ export const useSensorData = () => {
         }
       },
       (error) => {
-        setSensorData((prev) => ({
+        setBMSData((prev) => ({
           ...prev,
           loading: false,
           error: error.message,
@@ -54,9 +52,9 @@ export const useSensorData = () => {
 
     // Cleanup subscription
     return () => {
-      off(sensorRef);
+      off(bmsRef);
     };
   }, []);
 
-  return sensorData;
+  return bmsData;
 };

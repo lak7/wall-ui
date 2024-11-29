@@ -274,7 +274,7 @@ const WaveCharging = ({ percentage = 0 }) => {
               /> */}
               <div className="flex-col  justify-center items-center gap-2">
                 <span
-                  className={`${interThin.className} text-4xl    ${
+                  className={`${interThin.className} text-4xl ml-3    ${
                     percentage >= 60 ? "text-black " : "text-white"
                   } transition-all duration-300`}
                   style={{

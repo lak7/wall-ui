@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React from "react";
-import { useChargingStatus } from "@/hooks/useChargingStatus";
 
 interface ChargingOption {
   id: number;
@@ -13,13 +12,10 @@ interface ChargingOption {
 
 const Select = () => {
   const router = useRouter();
-  const { updateChargingStatus, status } = useChargingStatus();
 
   const handleSelect = async () => {
     try {
-      await updateChargingStatus(true);
-      // You can add additional logic here, like navigation
-      router.push("/charge");
+      router.push("/select-time");
     } catch (error) {
       console.error("Error initializing charging:", error);
     }
@@ -65,7 +61,6 @@ const Select = () => {
                   className="shadow-[inset_0_0_0_2px_#616467] text-black px-12 py-7 rounded-full tracking-widest uppercase font-bold bg-transparent hover:bg-[#616467] hover:text-white dark:text-neutral-200 transition duration-200 text-lg"
                   key={option.id}
                   onClick={handleSelect}
-                  disabled={status.isChargingInitialized}
                 >
                   <div className="w-full flex justify-between">
                     {option.text}
