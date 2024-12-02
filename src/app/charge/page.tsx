@@ -250,7 +250,7 @@ const Charge = () => {
           >
             Charging Current:{" "}
             <span className="group-hover:text-cyan-400/90 transition-colors duration-300">
-              {current} A
+              {current.toFixed(2)} A
             </span>
           </motion.div>
 
