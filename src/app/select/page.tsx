@@ -1,9 +1,9 @@
 // src/app/page.tsx
 "use client";
-import { ChargingPadWarning } from "@/components/FodDialog";
+import ChargingPadWarning from "@/components/FodDialog";
 import { database } from "@/config/firebase";
 import { useBMSData } from "@/hooks/useBMSData";
-import { onValue, ref } from "firebase/database";
+import { onValue, ref, set } from "firebase/database";
 import { motion } from "framer-motion";
 import { Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -17,6 +17,7 @@ interface ChargingOption {
 const Select = () => {
   const router = useRouter();
   const [isScootyParked, setIsScootyParked] = useState(true);
+  const [isFodThere, setIsFodThere] = useState(false);
   const { voltage, current, SOC, isReceiverCoilDetected, loading, error } =
     useBMSData();
 
@@ -54,6 +55,7 @@ const Select = () => {
           const isFodPresent = fodSnapshot.val();
 
           setIsScootyParked(isCoilDetected);
+          setIsFodThere(isFodPresent);
 
           console.log("Coil Detection:", isCoilDetected);
           console.log("FOD Present:", isFodPresent);
@@ -87,7 +89,7 @@ const Select = () => {
         backgroundPosition: "center",
       }}
     >
-      <ChargingPadWarning />
+      <ChargingPadWarning isFodThere={isFodThere} />
       {/* Hero Section */}
       <div className="flex justify-center items-center p-1 pt-40 w-full px-8">
         <motion.div

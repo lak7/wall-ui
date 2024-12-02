@@ -12,11 +12,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-export function ChargingPadWarning() {
+interface ChargingPadWarningProps {
+  isFodThere: boolean;
+}
+
+const ChargingPadWarning: React.FC<ChargingPadWarningProps> = ({
+  isFodThere,
+}) => {
   //   const [isOpen, setIsOpen] = useState(true);
 
   return (
-    <Dialog open={false}>
+    <Dialog open={isFodThere}>
       <DialogContent className="max-w-[400px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-destructive">
@@ -29,9 +35,11 @@ export function ChargingPadWarning() {
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button>I understand, I'll remove it</Button>
+          <Button>Please remove to continue</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+export default ChargingPadWarning;

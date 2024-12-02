@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import ChargingPadWarning from "@/components/FodDialog";
 import { ChevronLeft, ChevronRight, Timer, Zap, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,6 +22,7 @@ export default function Page() {
   const router = useRouter();
   const { updateChargingStatus, status } = useChargingStatus();
   const [isScootyParked, setIsScootyParked] = useState(true);
+  const [isFodThere, setIsFodThere] = useState(false);
   const [step, setStep] = useState<"hours" | "minutes">("hours");
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
@@ -128,6 +130,7 @@ export default function Page() {
           const isFodPresent = fodSnapshot.val();
 
           setIsScootyParked(isCoilDetected);
+          setIsFodThere(isFodPresent);
 
           console.log("Coil Detection:", isCoilDetected);
           console.log("FOD Present:", isFodPresent);
@@ -162,6 +165,7 @@ export default function Page() {
       }}
     >
       <div className="flex justify-center items-center p-1 pt-40 w-full px-8">
+        <ChargingPadWarning isFodThere={isFodThere} />
         <Card className="w-full max-w-md bg-transparent border-none">
           <CardContent className="border-none p-8">
             <div className="flex flex-col items-center space-y-8">
