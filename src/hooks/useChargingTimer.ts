@@ -74,6 +74,7 @@ export const useChargingTimer = (): ChargingTimerReturn => {
   const pauseTimer = () => {
     if (!isPaused && status?.duration?.endTime) {
       setIsPaused(true);
+      status.isChargingInitialized = false;
       // Store the remaining time when paused
       setPausedTimeLeft(status.duration.endTime);
     }
@@ -81,6 +82,7 @@ export const useChargingTimer = (): ChargingTimerReturn => {
 
   const resumeTimer = () => {
     if (isPaused && pausedTimeLeft) {
+      status.isChargingInitialized = true;
       // Calculate new end time based on remaining time
       const newEndTime = Date.now() + (pausedTimeLeft - Date.now());
       setIsPaused(false);

@@ -10,6 +10,8 @@ import { useRouter } from "next/navigation";
 import { useChargingStatus } from "@/hooks/useChargingStatus";
 import { onValue, ref, set } from "firebase/database";
 import { database } from "@/config/firebase";
+import { stat } from "fs";
+import ChargingPadWarning from "@/components/FodDialog";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -24,6 +26,7 @@ const Charge = () => {
   const [isScootyParked, setIsScootyParked] = useState(true);
   const { timeLeft, pauseTimer, resumeTimer } = useChargingTimer(); // Updated to use pause features
   const [power, setPower] = React.useState<number>(0);
+  const [isFodThere, setIsFodThere] = useState(false);
   const [energy, setEnergy] = React.useState<number>(0);
   const [isChargingInitialized, setIsChargingInitialized] =
     React.useState(false);
@@ -48,6 +51,7 @@ const Charge = () => {
           const isCoilDetected = coilSnapshot.val();
           const isFodPresent = fodSnapshot.val();
           setIsScootyParked(isCoilDetected);
+          setIsFodThere(isFodPresent);
         });
       });
 
@@ -79,7 +83,8 @@ const Charge = () => {
       return;
     }
 
-    if (current > 0) {
+    if (current > 0.001) {
+      status.isChargingInitialized = true;
       setIsChargingInitialized(true);
     } else {
       setPower(0);
@@ -173,7 +178,7 @@ const Charge = () => {
           </motion.div>
         </motion.div>
       </div>
-
+      <ChargingPadWarning isFodThere={isFodThere} />
       <div className="flex flex-col items-center gap-6 mb-12 scale-150">
         <motion.div
           className="inline-flex items-center gap-2 px-4 py-2 bg-black/60 backdrop-blur-md rounded-full border border-white/5 shadow-lg shadow-cyan-500/10"
