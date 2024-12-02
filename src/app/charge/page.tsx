@@ -8,7 +8,6 @@ import { useBMSData } from "@/hooks/useBMSData";
 import { useChargingTimer } from "@/hooks/useChargingTimer";
 import { useRouter } from "next/navigation";
 import { useChargingStatus } from "@/hooks/useChargingStatus";
-import { ChargingPadWarning } from "@/components/FodDialog";
 import { onValue, ref, set } from "firebase/database";
 import { database } from "@/config/firebase";
 
