@@ -45,7 +45,7 @@ export const useChargingStatus = () => {
 
   const updateChargingStatus = async (
     isCharging: boolean,
-    duration?: { hours: number; minutes: number }
+    duration?: { hours: number; minutes: number; endTime?: number }
   ) => {
     try {
       const chargingRef = ref(database, "charging_status");
@@ -57,9 +57,10 @@ export const useChargingStatus = () => {
           hours: duration?.hours || 0,
           minutes: duration?.minutes || 0,
           endTime:
-            isCharging && duration
+            duration?.endTime ||
+            (isCharging && duration
               ? now + (duration.hours * 3600000 + duration.minutes * 60000)
-              : undefined,
+              : undefined),
         },
       };
 
