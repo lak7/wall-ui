@@ -117,9 +117,6 @@ const Charge = () => {
 
   // Updated effect for parking status with timer pause
   useEffect(() => {
-    if (current <= 0) {
-      pauseTimerOnly();
-    }
     if (isScootyParked === false || isFodThere === true) {
       pauseTimer(); // Pause the timer when scooter is not parked
       // router.push("/park");
