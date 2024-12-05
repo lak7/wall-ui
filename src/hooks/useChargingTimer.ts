@@ -14,6 +14,7 @@ interface ChargingTimerReturn {
   pauseTimer: () => void;
   resumeTimer: () => void;
   resetTimer: () => void;
+  pauseTimerOnly: () => void;
 }
 
 export const useChargingTimer = (): ChargingTimerReturn => {
@@ -116,6 +117,32 @@ export const useChargingTimer = (): ChargingTimerReturn => {
     }
   };
 
+  const pauseTimerOnly = () => {
+    if (!isPaused && status?.duration?.endTime) {
+      setIsPaused(true);
+      const now = Date.now();
+      setPauseTimestamp(now);
+      // Store the exact remaining time when paused
+      const remainingTime = status.duration.endTime - now;
+      setPausedTimeLeft(remainingTime);
+
+      // When paused, immediately update the displayed time
+      const hours = Math.floor(remainingTime / (1000 * 60 * 60));
+      const minutes = Math.floor(
+        (remainingTime % (1000 * 60 * 60)) / (1000 * 60)
+      );
+      const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+      setTimeLeft({ hours, minutes, seconds });
+
+      // Update Firebase to reflect paused state with the exact remaining time and current end time
+      updateChargingStatus(true, {
+        hours: Math.floor(remainingTime / (1000 * 60 * 60)),
+        minutes: Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60)),
+        endTime: status.duration.endTime,
+      });
+    }
+  };
+
   const resumeTimer = () => {
     if (isPaused && pausedTimeLeft && pauseTimestamp) {
       const now = Date.now();
@@ -154,5 +181,6 @@ export const useChargingTimer = (): ChargingTimerReturn => {
     pauseTimer,
     resumeTimer,
     resetTimer,
+    pauseTimerOnly,
   };
 };

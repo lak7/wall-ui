@@ -24,7 +24,8 @@ const Charge = () => {
     useBMSData();
   const { status, resetChargingStatus } = useChargingStatus();
   const [isScootyParked, setIsScootyParked] = useState(true);
-  const { timeLeft, pauseTimer, resumeTimer } = useChargingTimer(); // Updated to use pause features
+  const { timeLeft, pauseTimer, resumeTimer, pauseTimerOnly } =
+    useChargingTimer(); // Updated to use pause features
   const [power, setPower] = React.useState<number>(0);
   const [isFodThere, setIsFodThere] = useState(false);
   const [energy, setEnergy] = React.useState<number>(0);
@@ -116,11 +117,16 @@ const Charge = () => {
 
   // Updated effect for parking status with timer pause
   useEffect(() => {
-    if (isScootyParked === false || isFodThere === true || current <= 0) {
+    if (current <= 0) {
+      pauseTimerOnly();
+    }
+    if (isScootyParked === false || isFodThere === true) {
       pauseTimer(); // Pause the timer when scooter is not parked
       // router.push("/park");
+    } else if (current <= 0) {
+      pauseTimerOnly();
     } else {
-      resumeTimer(); // Resume the timer when scooter is parked again
+      resumeTimer();
     }
   }, [isScootyParked, router, pauseTimer, resumeTimer]);
 
