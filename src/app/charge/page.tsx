@@ -170,7 +170,7 @@ const Charge = () => {
           >
             <span
               className={`${poppins.className} relative ${
-                isScootyParked ? "" : "text-red-500"
+                isScootyParked ? "" : "text-white"
               }`}
             >
               {isScootyParked
@@ -216,17 +216,41 @@ const Charge = () => {
 
       <WaveCharging isChargeInit={isChargingInitialized} percentage={SOC} />
 
-      <div className="flex w-full justify-center items-center mb-8">
-        <Image
-          src="/charging-scooty.png"
-          alt="Charger pad"
-          width={500}
-          height={300}
-          className="drop-shadow-[0_0_15px_rgba(6,182,212,0.15)]"
-        />
+      <div className="flex w-full justify-center items-center mb-4">
+        <div className="flex-col justify-center items-center gap-36">
+          <motion.div
+            initial={{ x: 768 }}
+            animate={{ x: 0 }}
+            key={isScootyParked ? "parked" : "not-parked"}
+            transition={{
+              duration: 5,
+              type: "spring",
+              stiffness: 100,
+              damping: 100,
+              repeat: isScootyParked ? 0 : Infinity,
+            }}
+          >
+            <Image
+              src="/charge-bike.png"
+              alt="Charger pad"
+              width={500}
+              height={300}
+              className="drop-shadow-[0_0_15px_rgba(6,182,212,0.15)]"
+            />
+          </motion.div>
+          <div className="flex w-full items-center justify-center">
+            <Image
+              src="/charge-pad.png"
+              alt="Charger pad"
+              width={200}
+              height={100}
+              className="drop-shadow-[0_0_15px_rgba(6,182,212,0.15)]"
+            />
+          </div>
+        </div>
       </div>
 
-      <div className="w-full px-12 mt-12">
+      <div className="w-full px-12 mt-7">
         <div className="grid grid-cols-2 gap-6">
           <motion.div
             className="group shadow-[0_0_0_1px_rgba(255,255,255,0.1)_inset] px-8 py-4 bg-black/20 backdrop-blur-sm rounded-lg text-gray-400 text-xl font-bold w-full text-center hover:shadow-[0_0_0_1px_rgba(6,182,212,0.2)_inset] transition-all duration-300 hover:bg-black/30"

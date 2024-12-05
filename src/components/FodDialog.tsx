@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import Image from "next/image";
 
 interface ChargingPadWarningProps {
   isFodThere: boolean;
@@ -19,24 +19,42 @@ interface ChargingPadWarningProps {
 const ChargingPadWarning: React.FC<ChargingPadWarningProps> = ({
   isFodThere,
 }) => {
-  //   const [isOpen, setIsOpen] = useState(true);
-
   return (
     <Dialog open={isFodThere}>
-      <DialogContent className="max-w-[400px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-destructive">
-            <AlertTriangle className="h-6 w-6" />
-            Warning: Foreign Object Detected
-          </DialogTitle>
-          <DialogDescription>
-            A foreign object has been detected on the charging pad. Please
-            remove it to continue charging safely.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button>Please remove to continue</Button>
-        </DialogFooter>
+      <DialogContent className="max-w-[400px] bg-[#D9D9D9]/20 backdrop-blur-sm border-none">
+        <div className="flex flex-col items-center gap-4 py-6">
+          <DialogHeader className="text-center space-y-4">
+            <DialogTitle className="text-2xl font-bold text-white text-center">
+              FOD ALERT
+            </DialogTitle>
+            <div className="bg-white rounded-full  p-8">
+              <Image
+                src="/fod-base.png"
+                alt="FOD Alert"
+                width={500}
+                height={500}
+              />
+            </div>
+            <Image
+              src="/fo.png"
+              alt="FOD Alert"
+              width={50}
+              height={50}
+              className="animate-pulse absolute top-48 left-36"
+            />
+          </DialogHeader>
+
+          <div className="flex flex-col items-center gap-2 text-center">
+            <DialogDescription className="text-xl font-semibold text-white">
+              FOREIGN OBJECT DETECTED
+            </DialogDescription>
+            <DialogDescription className="text-lg text-white/90">
+              Remove Foreign Object
+              <br />
+              From The Base Pad
+            </DialogDescription>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
