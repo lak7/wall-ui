@@ -33,7 +33,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="w-full relative z-10 flex justify-end items-center">
+    <nav className="w-full relative z-10 flex justify-end items-center ">
       {/* Header with logo */}
       <motion.div
         className="absolute top-8 left-8 flex items-center space-x-4 group"

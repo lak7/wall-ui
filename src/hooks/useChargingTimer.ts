@@ -1,6 +1,7 @@
 // hooks/useChargingTimer.ts
 import { useState, useEffect } from "react";
 import { useChargingStatus } from "./useChargingStatus";
+import { useRouter } from "next/navigation";
 
 interface TimeLeft {
   hours: number;
@@ -18,6 +19,7 @@ interface ChargingTimerReturn {
 }
 
 export const useChargingTimer = (): ChargingTimerReturn => {
+  const router = useRouter();
   const { status, resetChargingStatus, updateChargingStatus } =
     useChargingStatus();
   const [isPaused, setIsPaused] = useState(false);
@@ -65,6 +67,7 @@ export const useChargingTimer = (): ChargingTimerReturn => {
           setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
           setPausedTimeLeft(null);
           setPauseTimestamp(null);
+          router.push("/done");
           return;
         }
 
