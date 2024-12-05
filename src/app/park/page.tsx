@@ -94,10 +94,15 @@ const Park = () => {
               {isScootyParked ? "Vehicle Parked" : "Park your vehicle"}
             </span>
           </motion.div>
-          <div className="w-full"></div>
-          <span className="text-red-500 text-3xl text-center font-medium w-full">
-            {isFodPresent && "remove foreign object"}
-          </span>
+          <div className="w-full pt-5 flex justify-center items-center">
+            <span
+              className={`text-red-500 text-3xl text-center font-medium w-full ${
+                isFodPresent ? "animate-pulse" : ""
+              }`}
+            >
+              {isFodPresent && "Remove foreign object"}
+            </span>
+          </div>
         </motion.div>
       </div>
       <div className="absolute w-full flex justify-center items-center">
