@@ -77,7 +77,30 @@ const Charge = () => {
   //   }
   // }, [status.isChargingInitialized, router]);
 
-  // Effect for power and energy calculations
+  // Add an interval effect for energy calculations
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+
+    if (isScootyParked && !isFodThere && voltage && current) {
+      intervalId = setInterval(() => {
+        const calculatedPower = Number((voltage * current).toFixed(2));
+        setPower(calculatedPower);
+
+        const powerInKW = calculatedPower / 1000;
+        // Energy accumulated per second (1/3600 of an hour)
+        const calculatedEnergy = powerInKW / 3600;
+        setEnergy((prev) => Number((prev + calculatedEnergy).toFixed(6)));
+      }, 1000);
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [isScootyParked, isFodThere, voltage, current]);
+
+  // Remove energy calculations from the existing effect
   useEffect(() => {
     setPower(0);
     if (loading || error || !voltage || !current || SOC === undefined) {
@@ -90,30 +113,7 @@ const Charge = () => {
     } else {
       setPower(0);
     }
-
-    try {
-      const calculatedPower = Number((voltage * current).toFixed(2));
-      setPower(calculatedPower);
-
-      const powerInKW = calculatedPower / 1000;
-      const totalHours =
-        (status?.duration?.hours || 0) + (status?.duration?.minutes || 0) / 60;
-      const calculatedEnergy = Number((powerInKW * totalHours).toFixed(2));
-      setEnergy(calculatedEnergy);
-    } catch (err) {
-      console.error("Calculation error:", err);
-      setPower(0);
-      setEnergy(0);
-    }
-  }, [
-    voltage,
-    current,
-    SOC,
-    loading,
-    error,
-    status?.duration?.hours,
-    status?.duration?.minutes,
-  ]);
+  }, [voltage, current, SOC, loading, error]);
 
   // Updated effect for parking status with timer pause
   useEffect(() => {
@@ -257,7 +257,7 @@ const Charge = () => {
           >
             <span className="text-nowrap">Energy: </span>
             <span className="group-hover:text-cyan-400/90 transition-colors duration-300 text-nowrap">
-              {energy} kWh
+              {energy.toFixed(5)} kWh
             </span>
           </motion.div>
 
