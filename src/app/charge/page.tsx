@@ -39,6 +39,8 @@ const Charge = () => {
   const [energy, setEnergy] = React.useState<number>(0);
   const [isChargingInitialized, setIsChargingInitialized] =
     React.useState(false);
+  const [unparkStartTime, setUnparkStartTime] = useState<number | null>(null);
+  const [parkCountdown, setParkCountdown] = useState<number>(60); // 60 seconds
 
   // Format time helper function
   const formatTime = (value: number) => value.toString().padStart(2, "0");
@@ -170,6 +172,46 @@ const Charge = () => {
     }
   }, [isScootyParked, router, pauseTimer, resumeTimer]);
 
+  // Add this new effect to handle unpark timing and countdown
+  useEffect(() => {
+    let countdownInterval: NodeJS.Timeout;
+
+    if (!isScootyParked) {
+      // Set the initial unpark time if not already set
+      if (!unparkStartTime) {
+        setUnparkStartTime(Date.now());
+      }
+
+      // Start countdown timer
+      countdownInterval = setInterval(() => {
+        setParkCountdown((prev) => {
+          if (prev <= 1) {
+            // Reset everything and redirect
+            resetChargingStatus();
+            setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
+            setPausedTimeLeft(null);
+            setPauseTimestamp(null);
+            setIsChargingInitialized(false);
+            setEnergy(0);
+            router.push("/");
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else {
+      // Reset the unpark timer and countdown when scooter is parked
+      setUnparkStartTime(null);
+      setParkCountdown(60);
+    }
+
+    return () => {
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+      }
+    };
+  }, [isScootyParked, unparkStartTime, resetChargingStatus, router]);
+
   if (loading) {
     return (
       <div className="w-[768px] h-[1024px] flex items-center justify-center bg-[#2A2D32]">
@@ -213,13 +255,25 @@ const Charge = () => {
                 isScootyParked ? "" : "text-white"
               }`}
             >
-              {isScootyParked
-                ? isChargingInitialized
-                  ? current <= 0
-                    ? "Charging Paused"
-                    : "Charging"
-                  : "Initializing Charging"
-                : "Park your vehicle"}
+              {isScootyParked ? (
+                isChargingInitialized ? (
+                  current <= 0 ? (
+                    "Charging Paused"
+                  ) : (
+                    "Charging"
+                  )
+                ) : (
+                  "Initializing Charging"
+                )
+              ) : (
+                <div className="flex items-center gap-3">
+                  <span>Park your vehicle</span>
+                  <span className="text-red-400 font-mono bg-red-500/10 px-3 py-0.5 rounded-md border border-red-500/20">
+                    {Math.floor(parkCountdown / 60)}:
+                    {(parkCountdown % 60).toString().padStart(2, "0")}
+                  </span>
+                </div>
+              )}
             </span>
           </motion.div>
         </motion.div>
