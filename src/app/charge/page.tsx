@@ -24,8 +24,16 @@ const Charge = () => {
     useBMSData();
   const { status, resetChargingStatus } = useChargingStatus();
   const [isScootyParked, setIsScootyParked] = useState(true);
-  const { timeLeft, pauseTimer, resumeTimer, pauseTimerOnly } =
-    useChargingTimer(); // Updated to use pause features
+  const {
+    timeLeft,
+    setTimeLeft,
+    pauseTimer,
+    resumeTimer,
+    pauseTimerOnly,
+    isPaused,
+    setPausedTimeLeft,
+    setPauseTimestamp,
+  } = useChargingTimer(); // Updated to use pause features
   const [power, setPower] = React.useState<number>(0);
   const [isFodThere, setIsFodThere] = useState(false);
   const [energy, setEnergy] = React.useState<number>(0);
@@ -67,40 +75,67 @@ const Charge = () => {
     }
   }, []);
 
-  // Effect for charging status
-  // useEffect(() => {
-  //   if (status.isChargingInitialized === false) {
-  //     const navigationTimer = setTimeout(() => {
-  //       router.push("/done");
-  //     }, 1000);
-  //     return () => clearTimeout(navigationTimer);
-  //   }
-  // }, [status.isChargingInitialized, router]);
-
-  // Add an interval effect for energy calculations
+  // Updated effect for timer and energy calculation
   useEffect(() => {
-    let intervalId: NodeJS.Timeout;
+    let interval: NodeJS.Timeout;
 
-    if (isScootyParked && !isFodThere && voltage && current) {
-      intervalId = setInterval(() => {
-        const calculatedPower = Number((voltage * current).toFixed(2));
-        setPower(calculatedPower);
+    if (
+      status?.isChargingInitialized &&
+      status?.duration?.endTime &&
+      !isPaused
+    ) {
+      interval = setInterval(() => {
+        const now = Date.now();
+        const endTime = status.duration.endTime!;
+        const difference = endTime - now;
 
-        const powerInKW = calculatedPower / 1000;
-        // Energy accumulated per second (1/3600 of an hour)
-        const calculatedEnergy = powerInKW / 3600;
-        setEnergy((prev) => Number((prev + calculatedEnergy).toFixed(6)));
+        if (difference <= 0) {
+          clearInterval(interval);
+          resetChargingStatus();
+          setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
+          setPausedTimeLeft(null);
+          setPauseTimestamp(null);
+          router.push("/done");
+          return;
+        }
+
+        // Convert milliseconds to hours, minutes, seconds
+        const hours = Math.floor(difference / (1000 * 60 * 60));
+        const minutes = Math.floor(
+          (difference % (1000 * 60 * 60)) / (1000 * 60)
+        );
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+        setTimeLeft({ hours, minutes, seconds });
+
+        // Calculate and update energy only if charging is active
+        if (isChargingInitialized && !isFodThere && current > 0) {
+          const calculatedPower = Number((voltage * current).toFixed(2));
+          const powerInKW = calculatedPower / 1000;
+          // Energy accumulated per second (1/3600 of an hour)
+          const calculatedEnergy = powerInKW / 3600;
+          setEnergy((prev) => Number((prev + calculatedEnergy).toFixed(6)));
+        }
       }, 1000);
     }
 
     return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
+      if (interval) {
+        clearInterval(interval);
       }
     };
-  }, [isScootyParked, isFodThere, voltage, current]);
+  }, [
+    status?.isChargingInitialized,
+    status?.duration?.endTime,
+    resetChargingStatus,
+    isPaused,
+    isChargingInitialized,
+    isFodThere,
+    current,
+    voltage,
+  ]);
 
-  // Remove energy calculations from the existing effect
+  // Remove or modify the existing useEffect that was calculating power and energy
   useEffect(() => {
     setPower(0);
     if (loading || error || !voltage || !current || SOC === undefined) {
@@ -113,28 +148,27 @@ const Charge = () => {
     } else {
       setPower(0);
     }
+
+    try {
+      const calculatedPower = Number((voltage * current).toFixed(2));
+      setPower(calculatedPower);
+    } catch (err) {
+      console.error("Calculation error:", err);
+      setPower(0);
+    }
   }, [voltage, current, SOC, loading, error]);
 
   // Updated effect for parking status with timer pause
   useEffect(() => {
     if (isScootyParked === false || isFodThere === true) {
-      pauseTimer(); // Pause the timer when scooter is not parked or FOD is detected
+      pauseTimer(); // Pause the timer when scooter is not parked
+      // router.push("/park");
     } else if (current <= 0) {
       pauseTimerOnly();
     } else {
-      // Only resume if there's no FOD and scooter is parked
-      if (!isFodThere && isScootyParked) {
-        resumeTimer();
-      }
+      resumeTimer();
     }
-  }, [
-    isScootyParked,
-    isFodThere,
-    current,
-    pauseTimer,
-    resumeTimer,
-    pauseTimerOnly,
-  ]);
+  }, [isScootyParked, router, pauseTimer, resumeTimer]);
 
   if (loading) {
     return (
