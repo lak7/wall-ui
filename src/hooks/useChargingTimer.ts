@@ -33,85 +33,40 @@ export const useChargingTimer = (): ChargingTimerReturn => {
 
   // Effect to initialize timeLeft when status changes
   useEffect(() => {
-    if (status?.duration?.endTime) {
-      const now = Date.now();
-      const difference = status.duration.endTime - now;
-
-      if (difference > 0) {
-        const hours = Math.floor(difference / (1000 * 60 * 60));
-        const minutes = Math.floor(
-          (difference % (1000 * 60 * 60)) / (1000 * 60)
-        );
-        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-        setTimeLeft({ hours, minutes, seconds });
-      }
-    }
-  }, [status?.duration?.endTime]);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-
-    if (
-      status?.isChargingInitialized &&
-      status?.duration?.endTime &&
-      !isPaused
-    ) {
-      interval = setInterval(() => {
+    if (status?.duration?.endTime && !isPaused) {
+      const updateTime = () => {
         const now = Date.now();
-        const endTime = status.duration.endTime!;
-        const difference = endTime - now;
+        const difference = status.duration.endTime! - now;
 
-        if (difference <= 0) {
-          clearInterval(interval);
-          resetChargingStatus();
-          setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
-          setPausedTimeLeft(null);
-          setPauseTimestamp(null);
-          router.push("/done");
-          return;
+        if (difference > 0) {
+          const hours = Math.floor(difference / (1000 * 60 * 60));
+          const minutes = Math.floor(
+            (difference % (1000 * 60 * 60)) / (1000 * 60)
+          );
+          const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+          setTimeLeft({ hours, minutes, seconds });
         }
+      };
 
-        // Convert milliseconds to hours, minutes, seconds
-        const hours = Math.floor(difference / (1000 * 60 * 60));
-        const minutes = Math.floor(
-          (difference % (1000 * 60 * 60)) / (1000 * 60)
-        );
-        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+      // Update immediately
+      updateTime();
 
-        setTimeLeft({ hours, minutes, seconds });
-      }, 1000);
+      // Set up interval for continuous updates
+      const interval = setInterval(updateTime, 1000);
+
+      return () => clearInterval(interval);
     }
-
-    return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
-    };
-  }, [
-    status?.isChargingInitialized,
-    status?.duration?.endTime,
-    resetChargingStatus,
-    isPaused,
-  ]);
+  }, [status?.duration?.endTime, isPaused]);
 
   const pauseTimer = () => {
     if (!isPaused && status?.duration?.endTime) {
       setIsPaused(true);
       const now = Date.now();
       setPauseTimestamp(now);
-      // Store the exact remaining time when paused
       const remainingTime = status.duration.endTime - now;
       setPausedTimeLeft(remainingTime);
 
-      // When paused, immediately update the displayed time
-      const hours = Math.floor(remainingTime / (1000 * 60 * 60));
-      const minutes = Math.floor(
-        (remainingTime % (1000 * 60 * 60)) / (1000 * 60)
-      );
-      const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
-      setTimeLeft({ hours, minutes, seconds });
-
-      // Update Firebase to reflect paused state with the exact remaining time and current end time
+      // Update Firebase
       updateChargingStatus(false, {
         hours: Math.floor(remainingTime / (1000 * 60 * 60)),
         minutes: Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60)),
@@ -125,7 +80,6 @@ export const useChargingTimer = (): ChargingTimerReturn => {
       setIsPaused(true);
       const now = Date.now();
       setPauseTimestamp(now);
-      // Store the exact remaining time when paused
       const remainingTime = status.duration.endTime - now;
       setPausedTimeLeft(remainingTime);
 
@@ -149,19 +103,12 @@ export const useChargingTimer = (): ChargingTimerReturn => {
   const resumeTimer = () => {
     if (isPaused && pausedTimeLeft && pauseTimestamp) {
       const now = Date.now();
-      // Calculate new end time by adding the exact remaining time to current time
       const newEndTime = now + pausedTimeLeft;
 
-      const remainingHours = Math.floor(pausedTimeLeft / (1000 * 60 * 60));
-      const remainingMinutes = Math.floor(
-        (pausedTimeLeft % (1000 * 60 * 60)) / (1000 * 60)
-      );
-
-      // Update Firebase with the new end time explicitly
       updateChargingStatus(true, {
-        hours: remainingHours,
-        minutes: remainingMinutes,
-        endTime: newEndTime, // Set the new end time explicitly
+        hours: Math.floor(pausedTimeLeft / (1000 * 60 * 60)),
+        minutes: Math.floor((pausedTimeLeft % (1000 * 60 * 60)) / (1000 * 60)),
+        endTime: newEndTime,
       });
 
       setPausedTimeLeft(null);
