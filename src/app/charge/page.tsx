@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import { useChargingStatus } from "@/hooks/useChargingStatus";
 import { onValue, ref, set } from "firebase/database";
 import { database } from "@/config/firebase";
-import { stat } from "fs";
+import EmergencyStop from "@/components/EmergencyStop";
 import ChargingPadWarning from "@/components/FodDialog";
 
 const poppins = Poppins({
@@ -41,41 +41,50 @@ const Charge = () => {
     React.useState(false);
   const [unparkStartTime, setUnparkStartTime] = useState<number | null>(null);
   const [parkCountdown, setParkCountdown] = useState<number>(60); // 60 seconds
+  const [isEmergencyStop, setIsEmergencyStop] = useState(false);
 
   // Format time helper function
   const formatTime = (value: number) => value.toString().padStart(2, "0");
+
+  console.log("Emergency: ", isEmergencyStop);
 
   // Effect for Firebase listeners
   useEffect(() => {
     try {
       const coilRef = ref(database, "IsReceiverCoilDetected");
       const fodRef = ref(database, "Is_FOD_Present");
+      const emergencyStopRef = ref(database, "emergencyStop");
 
-      let unsubscribeFod: (() => void) | undefined;
-
+      // Separate listeners for better cleanup and independence
       const unsubscribeCoil = onValue(coilRef, (coilSnapshot) => {
-        if (unsubscribeFod) {
-          unsubscribeFod();
-        }
-
-        unsubscribeFod = onValue(fodRef, (fodSnapshot) => {
-          const isCoilDetected = coilSnapshot.val();
-          const isFodPresent = fodSnapshot.val();
-          setIsScootyParked(isCoilDetected);
-          setIsFodThere(isFodPresent);
-        });
+        const isCoilDetected = coilSnapshot.val();
+        setIsScootyParked(isCoilDetected);
       });
 
+      const unsubscribeFod = onValue(fodRef, (fodSnapshot) => {
+        const isFodPresent = fodSnapshot.val();
+        setIsFodThere(isFodPresent);
+      });
+
+      const unsubscribeEmergency = onValue(
+        emergencyStopRef,
+        (emergencySnapshot) => {
+          const emergencyValue = emergencySnapshot.val();
+          console.log("Emergency value from Firebase:", emergencyValue);
+          setIsEmergencyStop(emergencyValue);
+        }
+      );
+
+      // Cleanup all listeners
       return () => {
         unsubscribeCoil();
-        if (unsubscribeFod) {
-          unsubscribeFod();
-        }
+        unsubscribeFod();
+        unsubscribeEmergency();
       };
     } catch (error) {
       console.error("Error setting up Firebase listeners:", error);
     }
-  }, []);
+  }, []); // Empty dependency array since we want this to run once on mount
 
   // Updated effect for timer and energy calculation
   useEffect(() => {
@@ -212,6 +221,10 @@ const Charge = () => {
     };
   }, [isScootyParked, unparkStartTime, resetChargingStatus, router]);
 
+  useEffect(() => {
+    console.log("Emergency Stop State Changed:", isEmergencyStop);
+  }, [isEmergencyStop]);
+
   if (loading) {
     return (
       <div className="w-[768px] h-[1024px] flex items-center justify-center bg-[#2A2D32]">
@@ -278,6 +291,7 @@ const Charge = () => {
           </motion.div>
         </motion.div>
       </div>
+
       <ChargingPadWarning isFodThere={isFodThere} />
       <div className="flex flex-col items-center gap-6 mb-12 scale-150">
         <motion.div
@@ -396,6 +410,7 @@ const Charge = () => {
           </motion.div>
         </div>
       </div>
+      {isEmergencyStop && <EmergencyStop isEmergencyStop={isEmergencyStop} />}
     </div>
   );
 };
