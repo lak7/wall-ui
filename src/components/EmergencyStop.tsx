@@ -35,6 +35,7 @@ const EmergencyStop: React.FC<EmergencyStopProps> = ({ isEmergencyStop }) => {
 
       // Reset all charging states
       resetChargingStatus();
+      set(ref(database, "charging_status/isChargingInitialized"), false);
       setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
       setPausedTimeLeft(null);
       setPauseTimestamp(null);
@@ -65,6 +66,7 @@ const EmergencyStop: React.FC<EmergencyStopProps> = ({ isEmergencyStop }) => {
           console.log("Countdown:", prev);
           if (prev <= 1) {
             // Reset emergency stop in database before redirecting
+            set(ref(database, "charging_status/isChargingInitialized"), false);
             set(ref(database, "emergencyStop"), false)
               .then(() => {
                 window.location.href = "/";

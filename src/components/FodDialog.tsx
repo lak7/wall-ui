@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,6 +11,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import Image from "next/image";
+import { ref, set } from "firebase/database";
+import { database } from "@/config/firebase";
 
 interface ChargingPadWarningProps {
   isFodThere: boolean;
@@ -19,6 +21,11 @@ interface ChargingPadWarningProps {
 const ChargingPadWarning: React.FC<ChargingPadWarningProps> = ({
   isFodThere,
 }) => {
+  useEffect(() => {
+    if (isFodThere) {
+      set(ref(database, "charging_status/isChargingInitialized"), false);
+    }
+  }, [isFodThere]);
   return (
     <Dialog open={isFodThere}>
       <DialogContent className="max-w-[400px] bg-[#D9D9D9]/20 backdrop-blur-sm border-none">
