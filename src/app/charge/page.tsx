@@ -176,10 +176,10 @@ const Charge = () => {
       pauseTimer(); // Pause the timer when scooter is not parked
       // router.push("/park");
     } else if (current <= 0) {
-      set(ref(database, "charging_status/isChargingInitialized"), true);
+      // set(ref(database, "charging_status/isChargingInitialized"), true);
       pauseTimerOnly();
     } else {
-      set(ref(database, "charging_status/isChargingInitialized"), true);
+      // set(ref(database, "charging_status/isChargingInitialized"), true);
       resumeTimer();
     }
   }, [isScootyParked, router, pauseTimer, resumeTimer]);
